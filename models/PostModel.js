@@ -7,7 +7,7 @@ const postSchema = new Schema({
     type: String,
     required: true,
   },
-  description: {
+  post: {
     type: String,
     required: true,
   },
@@ -15,13 +15,42 @@ const postSchema = new Schema({
     type: String,
     required: true,
   },
+  description: {
+    type: String,
+    default: '',
+  },
+  keywords: {
+    type: String,
+    default: '',
+  },
   slug: {
     type: String,
     unique: true,
     required: true,
   },
-  post: {
+  public: {
+    type: Boolean,
+    default: false,
+  },
+  views: {
+    type: Number,
+    default: 0,
+  },
+  timeShared: {
+    type: Number,
+    default: 0,
+  },
+  likes: {
+    type: Number,
+    default: 0,
+  },
+  author: {
     type: String,
+    required: true,
+  },
+  authorUid: {
+    type: mongoose.SchemaTypes.ObjectId,
+    ref: 'admins',
     required: true,
   },
 },
