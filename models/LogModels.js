@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 const LogSchema = new Schema({
   action: {
     type: String,
-    enum: ['create', 'update', 'delete'],
+    enum: ['create', 'read', 'update', 'delete'],
     required: 'true',
   },
   author: {
