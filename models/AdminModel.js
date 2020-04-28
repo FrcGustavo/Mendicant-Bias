@@ -28,6 +28,10 @@ const adminSchema = new Schema({
     type: String,
     required: true,
   },
+  last_login: {
+    type: Date,
+    default: new Date(),
+  },
 }, {
   timestamps: true,
 });
