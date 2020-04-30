@@ -28,7 +28,7 @@ const postSchema = new Schema({
     unique: true,
     required: true,
   },
-  public: {
+  isPublic: {
     type: Boolean,
     default: false,
   },
@@ -53,8 +53,11 @@ const postSchema = new Schema({
     ref: 'admins',
     required: true,
   },
-},
-{
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
+}, {
   timestamps: true,
 });
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
 const exprees = require('express');
 const cors = require('cors');
@@ -6,7 +7,7 @@ const config = require('./config');
 
 const connectMongo = require('./dbs/mongo');
 
-const postRotes = require('./routes/posts');
+const PostRoutes = require('./routes/PostRoutes');
 const AdminRoutes = require('./routes/AdminRoutes');
 const AuthRoutes = require('./routes/AuthRoutes');
 
@@ -18,9 +19,19 @@ app.use(exprees.json());
 app.use(cors('*'));
 app.use(morgan('dev'));
 
-postRotes(app);
+PostRoutes(app);
 AdminRoutes(app);
 AuthRoutes(app);
+
+app.use((error, req, res, next) => {
+  console.dir(error);
+  res.status(error.status).json({
+    name: error.name,
+    status: error.status,
+    message: error.message,
+    stack: error.stack,
+  });
+});
 
 app.listen(config.srv.port, () => {
   console.log(`Server is runing on http://localhost:${config.srv.port}`);
