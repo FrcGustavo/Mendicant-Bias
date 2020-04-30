@@ -1,63 +1,87 @@
 const showdown = require('showdown');
 const Post = require('../models/PostModel');
 const slugify = require('../utils/plugins/slugify');
+const { NotFoundError, FieldsRequiredError } = require('../utils/Errors');
 
-converter = new showdown.Converter();
+const converter = new showdown.Converter();
 
+async function buildSlug(prevSlug) {
+  const existSlug = await Post.countDocuments({ slug: prevSlug });
+  if (existSlug > 0) {
+    return buildSlug(`${prevSlug}-${existSlug}`);
+  }
+  return prevSlug;
+}
 async function findAll(query) {
   const limit = Number(query.limit) || 10;
   const sort = query.sort ? String(query.sort) : '-_id';
-  console.log(sort);
+  const skip = (Number(query.page || 1) - 1) * limit;
 
-  const posts = await Post.find().limit(limit).sort(sort);
-  return posts.map((currentPost) => {
-    const {
-      _id, title, description, cover, slug, post,
-    } = currentPost;
-    return {
-      _id, title, description, cover, slug, post,
-    };
-  });
+  const posts = await Post.find({ isPublic: true, isActive: true }, 'title cover description slug').limit(limit).sort(sort).skip(skip);
+  if (posts.length === 0) {
+    throw new NotFoundError('list of posts not found', 404);
+  }
+
+  const totalPosts = await Post.countDocuments({ isPublic: true, isActive: true });
+  const pagination = {
+    totalDocuments: totalPosts,
+    totalPages: Math.ceil(totalPosts / (limit)),
+    page: query.page || 1,
+  };
+
+  return { posts, pagination };
 }
 
-async function create(data) {
+async function create(data, payload) {
+  const isPublic = false;
+  const views = 0;
+  const timeShared = 0;
+  const likes = 0;
+  const {
+    username: author,
+    sub: authorUid,
+  } = payload;
   const {
     title,
-    description,
-    cover,
     post,
+    cover,
+    description,
+    keywords,
   } = data;
+  let { slug } = data;
 
-  if (!title || !description || !cover) {
-    throw 'All fields is required';
+  if (!title || !description || !cover || !post || !keywords) {
+    throw new FieldsRequiredError('All fields is required');
   }
 
-  if (!data.slug) {
-    data.slug = slugify(title);
-  }
-
-  const isSlugRegistered = await isRegisteredSlug({ title });
-  if (isSlugRegistered) {
-    console.log(`${data.slug}-${isSlugRegistered}`);
-    data.slug = `${data.slug}-${isSlugRegistered}`;
+  if (!slug) {
+    const prevSlug = slugify(title);
+    slug = await buildSlug(prevSlug);
   }
 
   const createdPost = await Post.create({
     title,
-    description,
-    cover,
-    slug: data.slug,
     post,
+    cover,
+    description,
+    keywords,
+    slug,
+    isPublic,
+    views,
+    timeShared,
+    likes,
+    author,
+    authorUid,
   });
+
   return createdPost;
 }
 
 async function findBySlug(slug) {
-  const post = await Post.findOne({ slug });
+  const post = await Post.findOne({ slug, isPublic: true, isActive: true });
   if (!post) {
-    throw new Error('Not Found');
+    throw new NotFoundError(`the resource ${slug} not found`, 404);
   }
-  post.__v = undefined;
   post.post = converter.makeHtml(post.post);
   return post;
 }
@@ -68,14 +92,8 @@ async function update(slug, post) {
 }
 
 async function destroy(slug) {
-  const deletedPost = await Post.deleteOne({ slug });
+  const deletedPost = await Post.updateOne({ slug }, { isActive: false });
   return deletedPost;
-}
-
-async function isRegisteredSlug(query) {
-  const countSlug = await Post.countDocuments(query);
-  if (countSlug == 0) return false;
-  return countSlug;
 }
 
 module.exports = {

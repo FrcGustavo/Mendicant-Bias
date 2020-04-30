@@ -2,9 +2,9 @@ const Post = require('../services/PostsService');
 const success = require('../utils/responses/success');
 
 async function index(req, res, next) {
-  const { limit, sort } = req.query;
+  const { limit, sort, page } = req.query;
   try {
-    const posts = await Post.findAll({ limit, sort });
+    const posts = await Post.findAll({ limit, sort, page });
     success(res, 'posts listed', posts, 200);
   } catch (error) {
     next(error);
@@ -13,9 +13,10 @@ async function index(req, res, next) {
 
 async function create(req, res, next) {
   const post = req.body;
+  const { payload } = req;
   try {
-    const createdPost = await Post.create(post);
-    success(res, 'ost created', createdPost, 201);
+    const createdPost = await Post.create(post, payload);
+    success(res, 'post created', createdPost, 201);
   } catch (error) {
     next(error);
   }

@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const Admin = require('../models/AdminModel');
 
 async function create(admin) {
+  let cover = '/';
   const {
     firstName,
     lastName,
@@ -11,21 +12,11 @@ async function create(admin) {
   } = admin;
 
   if (!firstName || !lastName || !username || !email || !password) {
-    throw 'data is incomplete';
+    throw new Error('data is incomplete');
   }
 
   if (!admin.cover) {
-    admin.cover = '/';
-  }
-
-  const isEmailRegistered = await isRegisteredEmail(admin.email);
-  if (isEmailRegistered) {
-    throw 'Email is registered';
-  }
-
-  const isUsernameRegistered = await isRegisteredUsername(admin.username);
-  if (isUsernameRegistered) {
-    throw 'Username is registered';
+    cover = '/';
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,15 +25,13 @@ async function create(admin) {
     firstName,
     lastName,
     username,
-    cover: admin.cover,
+    cover,
     email,
     password: hashedPassword,
   });
   return createdAdmin;
 }
 async function update(admin, adminId) {
-  console.log('ID', adminId);
-
   const updatedAdmin = await Admin.updateOne({ _id: adminId }, admin);
   return updatedAdmin;
 }
@@ -52,23 +41,13 @@ async function findById(adminId) {
 }
 
 async function count() {
-  return await Admin.countDocuments();
+  const counted = await Admin.countDocuments();
+  return counted;
 }
 
 async function findByEmail(email) {
-  return await Admin.findOne({ email });
-}
-
-async function isRegisteredEmail(email) {
-  const user = await Admin.findOne({ email });
-  if (user) return true;
-  return false;
-}
-
-async function isRegisteredUsername(username) {
-  const user = await Admin.findOne({ username });
-  if (user) return true;
-  return false;
+  const admin = await Admin.findOne({ email });
+  return admin;
 }
 
 module.exports = {

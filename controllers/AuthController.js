@@ -14,7 +14,7 @@ async function signIn(req, res, next) {
     }
     delete admin.password;
     const payload = {
-      _sub: admin._id,
+      sub: admin._id,
       email: admin.email,
       username: admin.username,
     };

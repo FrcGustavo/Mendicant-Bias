@@ -1,7 +1,10 @@
+const MainController = require('./MainController');
+
 const Comments = {};
 
-class CommentsControllers {
+class CommentsControllers extends MainController {
   constructor() {
+    super();
     this.comments = Comments;
   }
 
@@ -12,7 +15,7 @@ class CommentsControllers {
       if (comments != null) {
         this.success(res, 'comments listed', comments, 200);
       } else {
-        this.success(res, 'comments not found', comments, 404);
+        this.notFound(res, 'comments not found', comments, 404);
       }
     } catch (error) {
       next(error);
@@ -37,10 +40,6 @@ class CommentsControllers {
     } catch (error) {
       next(error);
     }
-  }
-
-  static success(res, message, data, status) {
-    res.status(status).json({ message, data });
   }
 }
 
